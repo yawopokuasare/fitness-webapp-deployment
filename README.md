@@ -13,214 +13,209 @@
 ![1735216848703](https://github.com/user-attachments/assets/d67ee201-f446-4c6c-90ef-1a9667c5ea7d)
 ![1735216848217](https://github.com/user-attachments/assets/1d4b4eec-15af-44e8-971f-1c4419ea36e3)
 ![1735216848019](https://github.com/user-attachments/assets/95bcf195-b42a-47dd-8b7c-55216c6b29e7)
-# FitWeb-App
+# FitWeb - ECS Fargate Deployment
 
-## Project Overview
-FitWeb is an infrastructure-as-code (IaC) project designed to deploy a web-based fitness application to AWS using ECS Fargate. This project provisions an AWS VPC, subnets, security groups, and ECS resources through Terraform.
-
----
-
-## Table of Contents
-- [Prerequisites](#prerequisites)
-- [Architecture](#architecture)
-- [Terraform Files Breakdown](#terraform-files-breakdown)
-- [Setup Instructions](#setup-instructions)
-- [Static Website Code](#static-website-code)
-- [Verifying Deployment](#verifying-deployment)
-- [Pushing to GitHub](#pushing-to-github)
-- [Contributing](#contributing)
-
----
-
-## Prerequisites
-- AWS Account
-- AWS CLI configured with appropriate credentials
-- Terraform (v1.5 or later)
-- Docker (for container creation and testing)
-- Git (for version control)
-
----
+## Overview
+Complete infrastructure-as-code deployment of a containerized fitness web application on AWS ECS Fargate. This project demonstrates serverless container orchestration, secure networking, and automated infrastructure provisioning using Terraform.
 
 ## Architecture
-The infrastructure includes:
-- **VPC** – Custom VPC for isolated network resources
-- **Subnets** – Two public subnets across availability zones
-- **Internet Gateway** – For internet access
-- **Security Group** – Opens port 80 for HTTP traffic
-- **ECS Cluster** – Fargate-based deployment for serverless container management
-- **Task Definition** – Specifies container requirements and networking
-- **IAM Role** – Grants ECS tasks permissions to execute
+```
+Internet → ALB → ECS Service (Fargate) → Docker Container (Nginx)
+           ↓
+    Target Group
+           ↓
+      VPC (Public Subnets)
+```
 
----
+**Infrastructure Components:**
+- Custom VPC with multi-AZ public subnets
+- ECS Cluster with Fargate launch type
+- Application Load Balancer for traffic distribution
+- IAM roles for task execution
+- Security groups for controlled access
 
-## Terraform Files Breakdown
-### 1. **`main.tf`**
-- Provisions VPC, subnets, route tables, ECS cluster, and services.
-- Defines network settings, task definitions, and service configurations.
+## Technologies Used
+- **AWS Services:** ECS Fargate, VPC, ALB, IAM, CloudWatch
+- **IaC:** Terraform (v1.5+)
+- **Container:** Docker
+- **Web Server:** Nginx
+- **Languages:** HCL, HTML, CSS
 
-### 2. **`variables.tf`**
-- Contains configurable variables for CIDR blocks, subnets, and availability zones.
+## Features
+- ✅ Serverless container deployment (no EC2 management)
+- ✅ Automatic load balancing across availability zones
+- ✅ Infrastructure as Code for reproducible deployments
+- ✅ Secure networking with isolated VPC
+- ✅ Zero-downtime deployments
 
-### 3. **`output.tf`**
-- Outputs the ECS cluster ID and public IP addresses after deployment.
+## Project Structure
+```
+fitweb-ecs-project/
+├── main.tf              # VPC, ECS cluster, services
+├── variables.tf         # Input variables
+├── outputs.tf           # ECS cluster ID, public IPs
+├── provider.tf          # AWS provider configuration
+├── Dockerfile           # Container image definition
+├── index.html           # Application frontend
+├── styles.css           # Application styling
+└── .gitignore           # Terraform state files
+```
 
-### 4. **`provider.tf`**
-- Configures AWS provider with region details.
-
----
+## Prerequisites
+- AWS Account with ECS and VPC permissions
+- Terraform v1.5 or later
+- Docker installed locally
+- AWS CLI configured
+- Git for version control
 
 ## Setup Instructions
 
-### 1. Clone the Repository
+### 1. Clone Repository
 ```bash
-git clone https://github.com/DrewTheeFourth/fitweb-ecs-project.git
-cd fitweb-ecs-project
+git clone https://github.com/DrewTheeFourth/fitness-webapp-deployment.git
+cd fitness-webapp-deployment
 ```
 
-### 2. Initialize Terraform
+### 2. Review Configuration
+Edit `variables.tf` to customize:
+- VPC CIDR block
+- Subnet CIDR blocks
+- AWS region
+- Availability zones
+
+### 3. Initialize Terraform
 ```bash
 terraform init
 ```
 
-### 3. Validate Configuration
+### 4. Validate Configuration
 ```bash
 terraform validate
+terraform fmt
 ```
 
-### 4. Plan the Deployment
+### 5. Plan Deployment
 ```bash
-terraform plan
+terraform plan -out=tfplan
 ```
 
-### 5. Apply the Configuration
+### 6. Apply Infrastructure
 ```bash
-terraform apply
-```
-Confirm with `yes` when prompted.
-
----
-
-## Static Website Code
-
-### `index.html`
-```html
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>FitWeb - Fitness Tracker</title>
-    <link rel="stylesheet" href="styles.css">
-</head>
-<body>
-    <header>
-        <h1>Welcome to FitWeb</h1>
-        <p>Your journey to fitness starts here.</p>
-    </header>
-    <main>
-        <section>
-            <h2>Features</h2>
-            <ul>
-                <li>Custom Workout Timers</li>
-                <li>Meal Plan Recommendations</li>
-                <li>Track Your Progress</li>
-            </ul>
-        </section>
-    </main>
-    <footer>
-        <p>&copy; 2024 FitWeb. All rights reserved.</p>
-    </footer>
-</body>
-</html>
+terraform apply tfplan
 ```
 
-### `styles.css`
-```css
-body {
-    font-family: Arial, sans-serif;
-    text-align: center;
-    background-color: #f4f4f4;
-    margin: 0;
-    padding: 0;
-}
-header {
-    background-color: #333;
-    color: white;
-    padding: 20px 0;
-}
-main {
-    padding: 20px;
-}
-ul {
-    list-style: none;
-    padding: 0;
-}
-li {
-    margin: 10px 0;
-}
-footer {
-    background-color: #333;
-    color: white;
-    padding: 10px 0;
-}
-```
-
----
-
-## Verifying Deployment
-### 1. Check ECS Cluster and Service Status
+### 7. Retrieve Application URL
 ```bash
-aws ecs describe-services --cluster fitweb-ecs-cluster --services fitweb-service
+terraform output alb_dns_name
+# Visit: http://<alb-dns-name> in your browser
 ```
-- Ensure `status: ACTIVE` and `runningCount` > 0.
 
-### 2. Retrieve Public IP
+## Terraform Resources Created
+
+| Resource | Purpose |
+|----------|---------|
+| aws_vpc | Isolated network environment |
+| aws_subnet | Public subnets across 2 AZs |
+| aws_internet_gateway | Internet connectivity |
+| aws_security_group | Firewall rules (port 80) |
+| aws_ecs_cluster | Container orchestration |
+| aws_ecs_task_definition | Container specifications |
+| aws_ecs_service | Service management |
+| aws_iam_role | Task execution permissions |
+
+## Application Details
+
+**FitWeb Features:**
+- Custom workout timers
+- Meal plan recommendations
+- Progress tracking interface
+- Responsive design for mobile/desktop
+
+**Container Configuration:**
+```dockerfile
+FROM nginx:alpine
+COPY index.html /usr/share/nginx/html/
+COPY styles.css /usr/share/nginx/html/
+EXPOSE 80
+CMD ["nginx", "-g", "daemon off;"]
+```
+
+## Verification & Testing
+
+### Check ECS Service Status
 ```bash
-aws ecs describe-tasks --cluster fitweb-ecs-cluster
+aws ecs describe-services \
+  --cluster fitweb-ecs-cluster \
+  --services fitweb-service \
+  --query 'services[0].{Status:status,Running:runningCount,Desired:desiredCount}'
 ```
-- Look for `networkInterfaces` and `publicIpAddress`.
-- Test by visiting `http://<public-ip>` in a browser.
 
----
-
-## Pushing to GitHub
-### 1. Initialize Git
+### View Task Logs
 ```bash
-git init
+aws logs tail /ecs/fitweb-task --follow
 ```
 
-### 2. Create `.gitignore`
+### Test Application
 ```bash
-nano .gitignore
-```
-Add the following:
-```
-# Terraform files to ignore
-*.tfstate
-*.tfstate.backup
-.terraform/
-*.tfvars
-crash.log
-*.terraform.lock.hcl
-terraform.tfvars
+# Get ALB DNS name
+ALB_DNS=$(terraform output -raw alb_dns_name)
+
+# Test HTTP response
+curl -I http://$ALB_DNS
 ```
 
-### 3. Commit and Push
+## Cost Optimization
+- Fargate Spot for non-production (up to 70% savings)
+- Right-sized task CPU/memory allocation
+- Auto-scaling policies for dynamic workloads
+
+## Security Considerations
+- Security groups restrict traffic to port 80 only
+- IAM roles follow least privilege principle
+- VPC provides network isolation
+- CloudWatch logs enabled for audit trails
+
+## Troubleshooting
+
+**Common Issues:**
+
+1. **Task won't start:**
 ```bash
-git add .
-git commit -m "Initial commit"
-git remote add origin https://github.com/DrewTheeFourth/fitweb-ecs-project.git
-git branch -M main
-git push -u origin main
+   aws ecs describe-tasks --cluster fitweb-ecs-cluster --tasks <task-id>
+   # Check "stoppedReason" field
+```
+
+2. **Can't access application:**
+   - Verify security group allows port 80 from 0.0.0.0/0
+   - Check target group health status
+   - Ensure task is in RUNNING state
+
+3. **Terraform errors:**
+```bash
+   terraform refresh
+   terraform plan
+```
+
+## What I Learned
+- Implementing serverless container orchestration with ECS Fargate
+- Designing multi-AZ architectures for high availability
+- Using Terraform for reproducible infrastructure deployments
+- Troubleshooting ECS task launch failures and networking issues
+
+## Future Enhancements
+- [ ] Add HTTPS with ACM certificate
+- [ ] Implement CI/CD pipeline with GitHub Actions
+- [ ] Add RDS database for persistent storage
+- [ ] Configure auto-scaling based on CPU/memory metrics
+- [ ] Add CloudFront CDN for global content delivery
+- [ ] Implement blue/green deployment strategy
+
+## Cleanup
+```bash
+terraform destroy
+# Confirm with 'yes' when prompted
 ```
 
 ---
 
-## Contributing
-Feel free to fork this repository and submit pull requests to add features or improve the deployment.
-
----
-
-## License
-MIT License
-
+**AWS Certified Solutions Architect**
