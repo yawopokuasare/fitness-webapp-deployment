@@ -27,6 +27,8 @@ Internet → ALB → ECS Service (Fargate) → Docker Container (Nginx)
       VPC (Public Subnets)
 ```
 
+<img width="11628" height="9820" alt="Image" src="https://github.com/user-attachments/assets/2aefd0e0-2626-40be-84cf-b46e6c346ab6" /> 
+
 **Infrastructure Components:**
 - Custom VPC with multi-AZ public subnets
 - ECS Cluster with Fargate launch type
